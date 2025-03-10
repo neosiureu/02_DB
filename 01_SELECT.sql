@@ -177,7 +177,6 @@ SELECT EMP_ID, EMP_NAME, SALARY, DEPT_CODE /*SELECT절 */ FROM EMPLOYEE /*FROM�
 SELECT EMP_ID, EMP_NAME,  DEPT_CODE, JOB_CODE /*SELECT절 */ FROM EMPLOYEE /*FROM절 */ WHERE DEPT_CODE='D9' ; /*WHERE절 */
 
 
-
 -- 논리연산자 (AND OR)
 
 /*
@@ -191,7 +190,6 @@ SELECT EMP_ID, EMP_NAME,  DEPT_CODE, JOB_CODE /*SELECT절 */ FROM EMPLOYEE /*FRO
 
 
 SELECT EMP_ID, EMP_NAME, SALARY , PHONE /*SELECT절 */ FROM EMPLOYEE /*FROM절 */ WHERE SALARY <3000000 OR SALARY >= 5000000  ; /*WHERE절 */
-
 
 
 
@@ -219,4 +217,179 @@ SELECT EMP_ID, EMP_NAME, SALARY , PHONE /*SELECT절 */ FROM EMPLOYEE /*FROM절 *
  * EMPLOYEE 테이블에서 1990-01-01에서 1999-12-31 사이인 직원의 이름과 입사일을 조회한다
  * */
 SELECT EMP_NAME, HIRE_DATE  /*SELECT절 */ FROM EMPLOYEE /*FROM절 */ WHERE HIRE_DATE BETWEEN '1990-01-01' AND '1999-12-31' ; /*WHERE절 */
+
+
+
+----------------------------------------------------------------------------------------------------------------------------------------------
+
+-- Like
+
+/*
+LIKE : 비교하려는 값이 특정한 패턴을 만족시키면 조회하는 연산자
+작성법? WHERE LIKE '패턴 적용 값';
+
+> 패턴이 뭔데?
+
+
+%: 다른 글자가 거기에 있는 조건
+_: 글자의 수가 언더바 만큼 있다
+
+
+예시를 암기) %의 이용
+
+'A%': A로 시작하는 문자열
+
+'%A': A로 끝나는 문자열
+
+'%A%': A를 포함하는 문자열
+
+
+
+예시를 암기) _의 이용
+
+
+'A_': A로 시작하여 뒤에 무엇이 올지는 모르지만 한 글자 추가
+'____A': A로 끝나는 다섯글자의 문자열
+'__A_': A앞에 두글자 뒤에 한글자
+'_____': 어떤 글자라도 5자의 문자열
+ * */
+
+
+-- ex1) EMPLOYEE 테이블에서 성이 '전'씨인 사원의 사번과 이름을 조회
+
+SELECT EMP_ID,  EMP_NAME  
+FROM EMPLOYEE 
+WHERE EMP_NAME LIKE '전%';
+-- S F W A O
+
+
+-- ex2) EMPLOYEE 테이블에서 전화번호가 010으로 시작하지 않는 사원의 사번과 이름과 전화번호를
+
+
+SELECT EMP_ID,  EMP_NAME, PHONE
+FROM EMPLOYEE 
+WHERE PHONE NOT LIKE '010%';
+-- S F W A O
+
+
+-- ex3) EMPLOYEE 테이블에서 EMAIL에 _ 앞의 글자가 세 글자인 사원의 이름과 이메일을 조회
+
+
+SELECT EMP_ID, EMAIL
+FROM EMPLOYEE 
+-- WHERE EMAIL LIKE '___ _%';
+-- 언더바 앞에 세개를? 이러면 그냥 네개가 됨
+-- ESACLPE 문자 뒤에 작성된 언더바는 일반 문자로 쓰인다는 뜻
+WHERE EMAIL LIKE '___#_%' ESCAPE '#';
+-- 진짜 언더바 문자를 포함하며 앞에 세 글자만 있는 조건
+
+
+
+
+
+-- 연습문제) EMPLOYEE 테이블에서 EMAIL에 _ 앞의 글자가 네 글자 && 부서 코드가 D9나 D6이고, 입사일이 1990-01-01부터 2000-12-31일 사이 && 급여가 270만원 이상인 사원의 사번, 이름과 이메일, 급여 조회
+
+
+SELECT * FROM EMPLOYEE;
+
+SELECT EMP_ID, EMP_NAME, EMAIL, DEPT_CODE, HIRE_DATE, SALARY
+FROM EMPLOYEE 
+WHERE (EMAIL LIKE '____^_%' ESCAPE '^')
+AND (DEPT_CODE='D9' OR DEPT_CODE ='D6') 
+AND (HIRE_DATE BETWEEN '1990-01-01' AND '2000-12-31') 
+AND (SALARY>=2700000);
+-- 연산자 우선순위 => and는 or보다 우선 순윅 높다! 하지만 ()를 사용하면 된다
+
+
+/*
+연산자의 우선순위
+
+1위) 산술 연산자 (+-*또는 /)
+
+2위) 연결 연산자 (||)
+
+3위) 비교 연산자 (> < >= <= = != <>)
+
+4위) IS NULL / IS NOT NULL + LIKE또는 IN과 NOT IN
+
+5위) BETWEEN ... AND / NOT BETWEEN
+
+6위) NOT(논리 연산자)
+ex) SELECT EMP_NAME FROM EMPLOYEE WHERE **NOT GENDER** = '남';
+
+7위) AND
+
+8위) OR
+
+*/
+
+
+
+/*
+ * > 비교 연산자 IN
+
+비교하려는 값과 목록에 작성된 값 중 일치하는 것이 있으면 조회하는 연산자
+
+
+[작성법]
+
+WHERE 컬럼 IN (값1, 값2, 값3) ;
+
+이는 아래 명령어와 동치이다
+
+WHERE 컬럼 = '값1' OR 컬럼 = '값2' OR 컬럼 = '값3';
+ * */
+
+-- ex1) EMPLOYEE 테이블에서 부서코드가 D1 D6 D9인 사원의  사번, 이름, 부서코드 조회
+
+
+SELECT EMP_ID, EMP_NAME, DEPT_CODE FROM EMPLOYEE  
+
+WHERE DEPT_CODE NOT IN ('D1','D6','D9')
+OR 
+(DEPT_CODE IS NULL )
+;
+
+
+
+-- 컬럼에 값 자체가 없다면 NULL 
+
+--EMPLOYEE 테이블에서 보너스가 있는 사원의 이름과 보너스를 조회한다
+
+SELECT EMP_NAME, BONUS FROM EMPLOYEE  
+WHERE (BONUS IS NOT NULL);
+
+/*
+ * > ORDER BY절
+
+SELECT문의 조회 결과인 RESULT SET, 즉 값들을 원하는 방식으로 정렬하기 위함
+SELECT문 해석 시 가장 마지막에 해석 된다
+ * */
+
+
+-- EMPLOYEE 테이블에서 급여 오름차순으로 사번과 이름과 급여를 조회한다
+
+SELECT EMP_ID, EMP_NAME, SALARY FROM EMPLOYEE ORDER BY SALARY ASC;
+
+
+-- EMPLOYEE 테이블에서 급여가 200만 이상인 사원의 사번, 이름, 급여를 조회한다, 단 급여 내림차순으로 조회한다
+
+SELECT EMP_ID , EMP_NAME, SALARY FROM EMPLOYEE WHERE SALARY>=2000000  ORDER BY 3 DESC;
+
+
+-- ORDER BY뒤에 컬럼의 이름을 썼지만 컬럼명 뿐 아니라 순서, 별칭이 모두 들어올 수 있다
+
+
+-- ex) EMPLOYEE 테이블에서 이름과 입사일을 입사일 순서대로 조회한다
+
+SELECT EMP_NAME 이름 , HIRE_DATE AS 입사일 FROM EMPLOYEE ORDER BY 입사일;
+
+-- 이름 자리에 쌍따옴표가 있으면 공백이나 특수문자도 들어갈 수 있다
+
+-- 부서코드 오름차순 정렬 후 급여를 내림차순 정렬
+-- 대분류(앞조건)를 먼저 정렬한 후에 소분류 (뒷조건)를 정렬
+
+SELECT EMP_NAME 이름 , DEPT_CODE 코드, EMPLOYEE.SALARY AS 월급 FROM EMPLOYEE ORDER BY DEPT_CODE, SALARY DESC;
+
+
 
