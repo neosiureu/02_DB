@@ -13,34 +13,40 @@
  * */
 
 
--- 서브쿼리 예시1
+-- 서브쿼리 
 
 
 
--- 부서코드가 노옹철사원과 같은 부서 소속인 직원의 이름과 부서코드를 얻고 싶다
+-- ex1) 부서코드가 노옹철사원과 같은 부서 소속인 직원의 이름과 부서코드를 얻고 싶다
+
+
+
+
+
+
+
 
 -- 먼저 노옹철 사원의 부서코드를 조회한다 = 서브쿼리
-
+SELECT DEPT_CODE FROM EMPLOYEE e WHERE EMP_NAME = '노옹철';
 
 
 -- 다음으로 부서코드가 'D9'인 직원의 이름과 부서코드를 조회한다 (메인쿼리)
 
-
-SELECT EMP_NAME, DEPT_CODE FROM EMPLOYEE e WHERE DEPT_CODE = (SELECT DEPT_CODE FROM EMPLOYEE e WHERE EMP_NAME = '노옹철')
-;
-
-
-
--- 서브쿼리 예시 2: 전 직원의 평균 급여보다 많은 급여를 받고있는 직원의 사번과 이름, 직급코드, 급여를 조회한다
+SELECT EMP_NAME, DEPT_CODE FROM EMPLOYEE e 
+WHERE DEPT_CODE = (SELECT DEPT_CODE FROM EMPLOYEE e WHERE EMP_NAME = '노옹철');
 
 
 
 
+-- ex2: 전 직원의 평균 급여보다 많은 급여를 받고있는 직원의 사번과 이름, 직급코드, 급여를 조회한다
 
-SELECT e.EMP_ID, e.EMP_NAME , e.DEPT_CODE, e.SALARY  FROM EMPLOYEE e
-WHERE e.SALARY >= (SELECT CEIL(AVG(SALARY)) 
-FROM EMPLOYEE e)
-;
+SELECT AVG(e.SALARY ) FROM EMPLOYEE e;
+
+
+SELECT EMP_ID, EMP_NAME, SALARY  FROM EMPLOYEE e WHERE e.SALARY  >(SELECT AVG(e.SALARY ) FROM EMPLOYEE e) ;
+
+
+
 
 
 /*
@@ -81,42 +87,32 @@ ORDER BY JOB_CODE
   를 받는 직원의 사번, 이름, 직급명, 부서코드, 급여, 입사일을 조회한다 -메인
  * */
 
-SELECT MIN(e.SALARY ) FROM EMPLOYEE e ;-- 서브
 
-SELECT EMP_ID, EMP_NAME, JOB_NAME, DEPT_CODE, SALARY, HIRE_DATE
-FROM EMPLOYEE
-JOIN JOB USING(JOB_CODE)
-WHERE SALARY = (SELECT MIN(e.SALARY ) FROM EMPLOYEE e)
+SELECT EMP_ID, EMP_NAME, JOB_NAME, DEPT_CODE, SALARY, HIRE_DATE 
+FROM EMPLOYEE e JOIN JOB USING (JOB_CODE) WHERE SALARY> (SELECT MIN(e.SALARY ) FROM EMPLOYEE e)
 ;
+
+
+
+
+
+
 
 
 -- ex3) 노옹철사원의 급여보다 많이 받는 직원의 사번, 이름, 부서명, 직급명, 급여를 조회한다
 
-SELECT e.SALARY FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철';
 
-SELECT e.EMP_ID,e.EMP_NAME, DEPT_TITLE, JOB_NAME, SALARY
-FROM EMPLOYEE e 
-JOIN JOB USING (JOB_CODE)
-LEFT JOIN DEPARTMENT ON(DEPT_CODE = DEPT_ID) 
-WHERE e.SALARY > (SELECT e.SALARY FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철')
-;
+-- 이거 꼭 풀어보자 집에가서
+
+
+
 
 /*
 > ex4) 부서별로 (NULL부서 포함) 급여의 합계 중 가장 큰 부서의 부서명, 급여 합계를 조회
- 
-  
 부서별로 (NULL부서 포함) 급여의 합계 - 서브
 의 합계 중 가장 큰 부서의 부서명, 급여 합계를 조회 - 메인 
-
  * */
 
-
-SELECT DEPT_TITLE, SUM(SALARY ) 
-FROM EMPLOYEE 
-LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
-GROUP BY DEPT_TITLE
-HAVING SUM(SALARY) 
-= (SELECT  MAX(SUM(SALARY )) FROM EMPLOYEE GROUP BY EMPLOYEE.DEPT_CODE);
 
 
 
@@ -150,19 +146,24 @@ IN 또는 NOT IN을 사용할 수 있다: 여러 개의 결과값 중에서 한�
  * */
 
 
--- 부서별 최고급여를 받는 (서브)
--- 직원의  이름, 직급, 부서, 급여를 부서 오름차순으로 정렬하여 조회한다 (메인)
+-- ex1)부서별 최고급여를 받는 (서브)
+-- 직원의 이름, 직급, 부서, 급여를 부서 오름차순으로 정렬하여 조회한다 (메인)
 
 
 
 -- 부서별 최고급여를 받는 (서브)
-
-SELECT MAX(SALARY) FROM EMPLOYEE GROUP BY DEPT_CODE;
 
 -- 메인 쿼리 + 서브쿼리
 
-SELECT EMP_NAME, JOB_CODE, DEPT_CODE, SALARY 
-FROM EMPLOYEE WHERE SALARY IN ( SELECT MAX(SALARY) FROM EMPLOYEE GROUP BY DEPT_CODE ) ORDER BY DEPT_CODE ;
+SELECT EMP_NAME, JOB.JOB_NAME, EMPLOYEE.DEPT_CODE, SALARY
+FROM EMPLOYEE JOIN JOB USING (JOB_CODE) 
+WHERE SALARY IN ( SELECT MAX(SALARY) FROM EMPLOYEE e GROUP BY DEPT_CODE) 
+ORDER BY EMPLOYEE.DEPT_CODE 
+;
+
+SELECT MAX(SALARY) FROM EMPLOYEE e GROUP BY DEPT_CODE  ;
+
+
 
 
 /*
@@ -172,26 +173,24 @@ ex2) 사수(MANAGER_ID사번)에 해당하는 직원에 대한 조회 => 사번,
   
  * */
 
-SELECT DISTINCT e.MANAGER_ID FROM EMPLOYEE e WHERE e.MANAGER_ID IS NOT NULL;
+SELECT * FROM EMPLOYEE ;
+SELECT * FROM DEPARTMENT;
+SELECT * FROM JOB ;
 
+-- 
 
-SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME 
-FROM EMPLOYEE JOIN JOB USING (JOB_CODE) LEFT JOIN  DEPARTMENT  ON (DEPT_CODE = DEPT_ID)
-; -- 메인쿼리
+SELECT EMP_ID, EMP_NAME, d.DEPT_TITLE, j.JOB_NAME 
+FROM EMPLOYEE JOIN JOB j USING (JOB_CODE) JOIN DEPARTMENT d ON (d.DEPT_ID  = EMPLOYEE.DEPT_CODE ) 
+WHERE EMP_ID IN 
+;
+
+SELECT 
+
+ -- 메인쿼리
 
 
 -- 종합
 
-SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME 
-FROM EMPLOYEE JOIN JOB USING (JOB_CODE) LEFT JOIN  DEPARTMENT  ON (DEPT_CODE = DEPT_ID)
-WHERE EMP_ID IN (SELECT DISTINCT e.MANAGER_ID FROM EMPLOYEE e WHERE e.MANAGER_ID IS NOT NULL)
-; 
-
-
-SELECT EMP_ID, EMP_NAME, DEPT_TITLE, JOB_NAME 
-FROM EMPLOYEE JOIN JOB USING (JOB_CODE) LEFT JOIN  DEPARTMENT  ON (DEPT_CODE = DEPT_ID)
-WHERE EMP_ID NOT IN (SELECT DISTINCT e.MANAGER_ID FROM EMPLOYEE e WHERE e.MANAGER_ID IS NOT NULL)
-; 
 
 
 
@@ -423,7 +422,7 @@ WHERE EXTRACT (YEAR FROM HIRE_DATE ) = '2000'
 
 SELECT EMP_ID, EMP_NAME, DEPT_CODE, JOB_CODE, HIRE_DATE 
 FROM EMPLOYEE e 
-WHERE (DEPT_CODE, JOB_CODE ) = (SELECT DEPT_CODE, JOB_CODE  FROM EMPLOYEE e JOIN JOB USING (JOB_CODE) 
+WHERE (DEPT_CODE, JOB_CODE ) = (SELECT DEPT_CODE, JOB_CODE  FROM EMPLOYEE e
 WHERE EXTRACT (YEAR FROM HIRE_DATE ) = '2000');
 
 
