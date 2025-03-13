@@ -527,4 +527,364 @@ GROUP BY JOB_CODE);
 
 
 SELECT * FROM EMPLOYEE e ;
+
+
+
+
+
+/*
+ 메인쿼리가 사용하는 테이블의 값이 있음 => 서브쿼리안에 그것이 들어 감
+  
+메인 쿼리의 테이블값이 변경되면 서브쿼리 결과 값이 변하는 구조
+  
+메인쿼리 한 행을 조회하고 해당 행이 서브쿼리의 조건을 충족하는지 확인 => SELECT
+  
+해석순서가 기존 서브쿼리와 다름 => 
+  
+메인쿼리 한 행을 읽고 그 한 행에 대해 서브 쿼리를 수행한다.
+
+메인쿼리 다음 행을 읽고 그 한 행에 대해 서브 쿼리를 수행한다.
+  
+....  
+....
+....  
+메인쿼리 마지막 행을 읽고 그 한 행에 대해 서브 쿼리를 수행한다.
+  
+ * */
+
+-- ex) 직급별 급여평균보다 급여를 많이 받는 직원의 
+--이름과 직급코드와, 급여를 조회 BY 상관서브쿼리
+
+-- 메인쿼리
+
+SELECT EMP_NAME, JOB_CODE, e.SALARY  FROM EMPLOYEE e ;
+SELECT AVG(SALARY) FROM EMPLOYEE e WHERE JOB_CODE ='J1';  --  직급별인데 GROUP BY가 아님. 한 행만 일단 생각해봐
+-- 서브쿼리
+-- J1인 잡코드를 가지는 행만 가지고 평균을 냄 => 당연히 한 사람이니 8백만원 
+-- => 다시 메인 쿼리로 감 => 급여 평균 800만원인데 800만원보다 많이 받냐? FALSE 
+-- => 최종 RESULT SET에서 제외
+SELECT AVG(SALARY) FROM EMPLOYEE e WHERE JOB_CODE ='J2';  --  직급별인데 GROUP BY가 아님. 한 행만 일단 생각해봐
+
+-- 송종기 J2인 잡코드를 가지는 행만 가지고 평균을 냄 => 480만원
+-- => 다시 메인 쿼리로 감 => 급여 평균 480만원인데 480만원보다 많이 받냐? TRUE
+-- => 최종 RESULT SET에 포함
+
+
+-- 노옹철 J2인 잡코드를 가지는 행만 가지고 평균을 냄 => 600만원
+-- => 다시 메인 쿼리로 감 => 급여 평균 480만원인데 480만원보다 많이 받냐? FALSE
+-- => 최종 RESULT SET에서 제외
+
+
+-- 이와같은 식으로 진행한다
+
+
+-- 상관쿼리 이름
+SELECT EMP_NAME, JOB_CODE, SALARY FROM EMPLOYEE MAIN 
+WHERE SALARY > ( SELECT AVG(SALARY) FROM EMPLOYEE SUB WHERE MAIN.JOB_CODE = SUB.JOB_CODE)
+;
+
+
+
+-- 사수가 있는 직원의 사번, 이름, 부서명, 사수의사번을 조회한다
+-- 상관 서브쿼리를 이용하여 각 직원의 MANAGER_ID가 실제로 직원 테이블의 EMP_ID와 일치하는지 확인한다
+
+
+
+-- 메인쿼리: 직원의 사번, 이름, 부서명, 사수의사번을 조회한다
+-- 서브쿼리: 사수인 직원 조회
+
+-- 서브쿼리
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, MANAGER_ID 
+FROM EMPLOYEE e LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);  -- 아이디가 없는 것도 포함
+
+SELECT EMP_ID FROM EMPLOYEE e WHERE e.EMP_ID  = 200; -- 사수가 실제로 존재하는 직원 (선동일이 사수)
+
+SELECT EMP_ID FROM EMPLOYEE e WHERE e.EMP_ID  = 214; -- 사수가 실제로 존재하는 직원 (방명수가 사수)
+
+
+-- 최종
+
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, MANAGER_ID 
+FROM EMPLOYEE MAIN LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID) WHERE MANAGER_ID = (SELECT EMP_ID FROM EMPLOYEE SUB WHERE SUB.EMP_ID =MAIN.MANAGER_ID  )
+;
+
+
+
+-- ex30
+
+-- 부서별 입사일이 가장 빠른 사원의 사번과 이름, 부서코드와 부서이름 (NULL이라면 소속이 없다), 직급명, 입사일을 조회한다
+
+-- 입사일이 빠른순으로 정렬하되 퇴사한 사원은 제외한다
+
+
+/*메인쿼리
+
+사원의 사번과 이름, 부서코드와 부서이름 (NULL이라면 소속이 없다), 직급명, 입사일 + 퇴사한 사원은 제외
+*/
+
+
+/* 서브쿼리
+부서별 입사일이 가장 빠른 사원
+*/
+
+
+-- 메인
+
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
+FROM EMPLOYEE JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N' ; 
+
+
+-- 서브
+
+-- MIN을 이용하여 입사일의 값이 가장 작은 것을 찾는다
+
+SELECT MIN(HIRE_DATE) FROM EMPLOYEE WHERE DEPT_CODE = 'D1'; -- 방명수는 가장 빠른 입사일을 가진 사람이 아니므로 제외
+
+SELECT MIN(HIRE_DATE) FROM EMPLOYEE WHERE DEPT_CODE = 'D2'; -- 차태연은 가장 빠른 입사일을 가진 사람이 아니므로 제외
+
+SELECT MIN(HIRE_DATE) FROM EMPLOYEE WHERE DEPT_CODE = 'D3'; -- 전지연은 가장 빠른 입사일을 가진 사람이 맞다
+
+SELECT MIN(HIRE_DATE) FROM EMPLOYEE WHERE DEPT_CODE = 'D4'; -- 임시환은 가장 빠른 입사일을 가진 사람이 아니므로 제외
+
+
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
+FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N' AND HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE WHERE DEPT_CODE = 'D4' )
+-- 원하는 것은 이게 아님!
+;
+
+
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
+FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N' AND HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE SUB WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE )
+-- 이것이 원하는 것 (퇴사자 없으면 부서 X)
+;
+
+
+
+
+-- 상관쿼리1) 
+/*
+ 이태림이 DB부서에서 가장빠른 입사& 퇴사자여서 걸러졌는데 D8부서가 아예 제외되게 만들고싶지는 않음 
+ -> 메인쿼리에서 퇴사자 & DB부서의 가장 빠른 입사일인 이태림을 이미 제외시킨 상태
+ * */
+
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
+FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N' AND HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE SUB WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE) 
+ORDER BY HIRE_DATE;
+;
+
+-- 상관쿼리2) 
+/*
+ D8을 포함시키고 이태림을 빼고 D8에서 제일 
+ 
+ * */
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
+FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+ WHERE HIRE_DATE = (SELECT MIN(HIRE_DATE)
+								FROM EMPLOYEE SUB
+								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE AND ENT_YN = 'N' 
+								OR (SUB.DEPT_CODE IS NULL AND MAIN.DEPT_CODE IS NULL))
+ORDER BY HIRE_DATE;
+
+
+
+
+
+-- D8부서의 가장 빠른 입사일 => 메인 쿼리에서 퇴사자 & D8부서의 가장빠른 입사일인 이태림을 벌써 제외시킨 상태 => 원하는 결과가 안 나옴
+
+
+
+
+
+
+
+
+
+-- 모든 직원의 이름, 직급, 급여, 전체사원 중 가장 높은 급여와의 차를 조회
+-- 서브 = 전체사원 중 가장 높은 급여
+
+
+SELECT EMP_NAME, JOB_CODE, SALARY, (SELECT MAX(SALARY) FROM EMPLOYEE) -SALARY "급여차" FROM EMPLOYEE ;
+
+
+
+
+-- 모든 직원의 이름, 직급, 급여, 각 직원들이 속한 직급의 급여 평균을 조회
+
+-- 각 직원들이 속한 직급 (스칼라+ 상관 커리)의 서브쿼리
+
+
+
+SELECT EMP_NAME, JOB_CODE, SALARY  FROM EMPLOYEE ;
+
+-- 서브쿼리 
+
+SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J1' ;
+SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J2' ;
+SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J3' ;
+
+
+
+
+--최종
+
+SELECT EMP_NAME, JOB_CODE, SALARY, (SELECT ROUND(AVG(SALARY),-3) FROM EMPLOYEE SUB WHERE SUB.JOB_CODE = MAIN.JOB_CODE) 평균  FROM EMPLOYEE MAIN 
+;
+
+
+-- 모든 사원의 사번, 이름, 관리자사번, 관리자명을 조회 (단 관리자가 없는 경우 '없음'으로 표시) => 스칼라와 상관 커리르 섞어라
+
+
+-- 메인
+SELECT EMP_NO, EMP_NAME, MANAGER_ID, NVL ( ( SELECT EMP_NAME FROM EMPLOYEE SUB  WHERE  MAIN.MANAGER_ID = SUB.EMP_ID ), '없음' )관리자명  FROM EMPLOYEE MAIN ;
+
+-- 서브
+
+( SELECT EMP_NAME FROM EMPLOYEE SUB  WHERE  MAIN.MANAGER_ID = SUB.EMP_ID );
+
+
+
+
+
+
+/*
+  INLINE VIEW
+
+
+FROM절에서 서브쿼리를 사용하는 경우임 => 서브쿼리가 만든 결과의 RESULT SET을 테이블취급하여 사용하는 것
+  
+ * */
+
+
+SELECT EMP_NAME 이름, DEPT_TITLE 부서 FROM EMPLOYEE JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID); 
+
+
+-- 부서가 기술지원부인 모든 컬럼을 조회
+
+
+SELECT * FROM 
+( 
+SELECT EMP_NAME 이름, DEPT_TITLE 부서 FROM EMPLOYEE JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID)
+)
+WHERE 부서 = '기술지원부';
+
+
+
+
+-- TOP N 분석 => 전직원 중 급여가 높은 상위 5명의 순위와 이름과 급여를 조회한다
+
+-- ROW NUM 가상 컬럼 => 행 번호를 나타내는 가상 컬럼
+
+-- ROW NUM은 SELECT, WHERE, ORDERBY절에서 사용 가능
+
+SELECT ROWNUM, EMP_NAME, SALARY FROM EMPLOYEE WHERE ROWNUM<=5 ORDER BY SALARY DESC  ;
+-- SELECT문의 해석순서 때문에 급여상 TOP5가 아닌 조회순서는 따로 있고 상위 5명끼리의 급여 순위가 조회되는 것 => 일단 SELECT되었으니 그 이후에 
+
+-- 이름, 급여를 급여 내림차수능로 조회한 결과를 인라인뷰 사용하여 조회한다 => FROM절에 작성된다면 해석순위가 제일 앞선다
+
+
+
+-- 단계1: 서브쿼리의 작성
+SELECT EMP_NAME, SALARY FROM EMPLOYEE ORDER BY SALARY DESC ;
+
+
+
+-- 단계2: 메인쿼리 조회 시 ROWNUM을 5이하까지만 조회
+SELECT ROWNUM, EMP_NAME, SALARY 
+FROM ( SELECT EMP_NAME, SALARY FROM EMPLOYEE ORDER BY SALARY DESC ) -- 1순위 해석 FROM자체가 전체 직원의 SALARY를 내림차순 정렬
+WHERE ROWNUM<=5; -- 2순위 해석
+;
+
+
+
+-- ex2)
+-- 급여평균이 3위안에 드는 부서의 부서코드, 부서명, 평균급여를 조회한다
+-- 인라인뷰 내에 GROUPBY를 써야 함
+
+-- 서브 (급여평균이 3위 내)
+
+SELECT DEPT_CODE, DEPT_TITLE, AVG(SALARY) "평균급여"  
+FROM EMPLOYEE LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+GROUP BY DEPT_CODE, DEPT_TITLE
+ORDER BY AVG(SALARY) DESC
+; -- 서브쿼리 내에도 테이블이 되어야 하므로 세 개의 컬럼이 있어야 함
+
+
+-- 메인
+
+SELECT DEPT_CODE, DEPT_TITLE, "평균급여"
+FROM  (SELECT DEPT_CODE, DEPT_TITLE, AVG(SALARY) "평균급여"  
+FROM EMPLOYEE LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
+GROUP BY DEPT_CODE, DEPT_TITLE
+ORDER BY AVG(SALARY) DESC) 
+WHERE ROWNUM<=3
+;
+
+
+-- 전직원의 급여 10 순위
+
+-- 서브
+
+SELECT EMP_NAME, SALARY FROM EMPLOYEE ORDER BY SALARY  DESC;
+-- 결과 값을 테이블로 사용하는 인라인뷰 사용 예정 => 복사붙여넣기 하지 말고 WITH AS를 앞에 쓰자
+
+/*
+
+WITH 
+서브쿼리에 이름을 붙이고 마치 그 이름처럼 사용한다 => 인라인뷰로 사용될, 즉 결과값일 테이블인 서브쿼리에 주로 사용됨
+실행속도가 빨라짐
+ * */ 
+
+
+
+WITH TOP_SAL AS (SELECT EMP_NAME, SALARY FROM EMPLOYEE ORDER BY SALARY  DESC)
+SELECT ROWNUM, EMP_NAME, SALARY FROM TOP_SAL WHERE ROWNUM<=10;
+-- 그 뒤에 메인을 붙여넣으면 됨
+
+
+
+
+
+
+
+-- RANK() OVER / DENSE_RANK() OVER
+
+/*
+ 
+ RANK()OVER => 동일한 순위 이후의 등수를 동점인 인원수 만큼 건너뛰게끔 순위를 계산한다
+ 가령 1등이 두명이면 그 다음은 3위가 됨
+ 
+ 
+ ex) 사원별 급여 순위
+ 
+ RANK() OVER (정렬 순서) / DENSE_RANK() OVER(정렬순서)
+
+ * */
+
+
+SELECT RANK() OVER (ORDER BY SALARY DESC) 순위, EMP_NAME, SALARY FROM EMPLOYEE;
+
+
+SELECT DENSE_RANK() OVER (ORDER BY SALARY DESC) 순위, EMP_NAME, SALARY FROM EMPLOYEE;
+
+
+
+
+
+
+
+-- DENSE_RANK() OVER(ORDER BY) => 공동 1위가 둘이어도 다음 순위는 2위
+
+
+
+
+
+
+
+
+
+
 -- LAST
