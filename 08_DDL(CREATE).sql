@@ -85,3 +85,193 @@ SELECT * FROM USER_CONSTRAINTS  ;
  * CLOB : 대용량 문자 데이터 (4GB)
  *
  * */
+
+
+-- MEMBER 테이블을 직접 생성해보자
+
+
+CREATE TABLE "MEMBER" (
+	MEMBER_ID VARCHAR2(20) -- 최대6자의 한글, 최대 20자의 영어를 넣을 수 있음
+, MEMBER_PWD VARCHAR2(20)
+, MEMBER_NAME VARCHAR2(30)
+, MEMBER_SSN CHAR(14)
+, ENROLL_DATE DATE DEFAULT SYSDATE -- 값을 지정하지 않으면 이 값이 자동으로 들어감
+
+);
+
+
+
+-- 컬럼에 대한 COMMENT 달기
+
+/*
+ COMMENT ON COLUMN 테이블명.컬럼명 IS 주석내용
+ * */
+
+
+COMMENT ON COLUMN MEMBER.MEMBER_ID IS '회원 아이디';
+
+COMMENT ON COLUMN MEMBER.MEMBER_PWD IS '회원 비밀번호';
+
+COMMENT ON COLUMN MEMBER.MEMBER_NAME IS '회원 이름';
+
+COMMENT ON COLUMN MEMBER.MEMBER_SSN IS '회원 주민등록번호';
+
+COMMENT ON COLUMN MEMBER.ENROLL_DATE IS '회원 가입일';
+
+
+
+
+-- 테이블에 삽입하기
+
+
+
+
+
+
+-- INSERT INTO 테이블명 VALUES(값1, 값2, ... 마지막 값)
+
+INSERT INTO "MEMBER" MBER VALUES('MEM01','123ABC','홍길동','960830-1111222', DEFAULT );
+
+
+
+SELECT * FROM MEMBER;
+
+/*
+INSERT/ UPDATE 시에 컬럼 값을 DEFAULT로 작성하면 테이블을 생성할 때 해당 컬럼에 지정된 디폴트 값으로 자동 생성 됨
+ * */
+
+COMMIT;
+
+
+INSERT INTO "MEMBER" MBER VALUES('MEM02','JUWN111','김영희','020000-3333333', SYSDATE );
+
+INSERT INTO "MEMBER" (MEMBER_ID, MEMBER_PWD, MEMBER_NAME) VALUES ('MEM03', '1Q2W3E', '이지연' );
+
+
+/*
+  > NUMBER 타입 이용 시 주의해야할 점
+  
+ 일단 MEMBER2라는 이름의 테이블을 생성한다 (아이디, 비밀번호, 이름, 전화번호)
+ * */
+
+
+CREATE TABLE MEMBER2 (
+MEMBER_ID VARCHAR2(20) -- 최대6자의 한글, 최대 20자의 영어를 넣을 수 있음
+, MEMBER_PWD VARCHAR2(20)
+, MEMBER_NAME VARCHAR2(30)
+, MEMBER_TEL NUMBER
+);
+
+INSERT INTO MEMBER2 VALUES ('MEM01', 'PASS01', '고길동',01012341234);
+
+/*
+ NUMBER타입 컬럼에 데이터 삽입 시 제일 앞에 0이 있으면 이를 자동으로 제거함
+=> 따라서 전화번호나 주민등록번호처럼 숫자로만 되어있는 데이터라고 해도 0으로 시작될 가능성이 조금이라도 있다면 CHAR 또는 VARCHAR2와 같은 문자열을 사용하기로 한다
+ * */
+
+SELECT * FROM MEMBER2;
+
+COMMIT;
+
+
+
+
+
+
+
+-- 제약조건을 포함한다
+
+--------------------------------------------------------------
+
+-- 제약 조건 (CONSTRAINTS)
+
+
+/*
+ * 사용자가 원하는 조건의 데이터만 유지하기 위해서 특정 컬럼에 설정하는 제약.
+ * 데이터 무결성 보장을 목적으로 함.
+ *  -> 중복 데이터 X
+ *
+ * + 입력 데이터에 문제가 없는지 자동으로 검사하는 목적
+ * + 데이터의 수정/삭제 가능 여부 검사등을 목적으로 함.
+ *    --> 제약조건을 위배하는 DML 구문은 수행할 수 없다.
+ *
+ *
+ * 제약조건 종류
+ * PRIMARY KEY, NOT NULL, UNIQUE, CHECK, FOREIGN KEY.
+ *
+ *
+ * */
+
+-- 1. NOT NULL
+-- 해당 컬럼에 반드시 값이 기록되어야 하는 경우 사용
+-- 삽입/수정 시 NULL 값을 허용하지 않도록 컬럼레벨에서 제한
+
+-- * 컬럼레벨 : 테이블 생성 시 컬럼을 정의하는 부분에 작성하는 것
+
+
+CREATE TABLE USER_USED_NN ( 
+	-- 이 부분이 컬럼 레벨에 해당
+	USER_NO NUMBER NOT NULL  -- 사용자 번호에 대한 컬럼 => 모든 사용자는 사용자번호가 있어야 하기 때문에
+	,USER_ID VARCHAR2(20)
+	,USER_PWD VARCHAR2(20)
+	,USER_NAME VARCHAR2(30)
+	,GENDER VARCHAR2(10)
+	,PHONE VARCHAR2(30)
+	,EMAIL VARCHAR2(50)
+	
+	-- 여기서부터는 컬럼 레벨이 아닌 테이블 레벨이라는 영역
+);
+
+INSERT INTO USER_USED_NN VALUES (
+1, 'USER01', 'PASS01', '홍길동', '남자', '010-1234-5678', 'HONGGD@or>kr'
+);
+
+
+
+
+
+
+
+
+
+--- 다음 제약 조건: UNIQUE
+
+/*
+ -- 2. UNIQUE 제약조건
+-- 컬럼에 입력값에 대해서 중복을 제한하는 제약조건
+-- 컬럼 레벨에서 설정가능, 테이블 레벨에서 설정가능
+-- 단, UNIQUE 제약조건이 설정된 컬럼에 NULL 값은 중복 삽입 가능.
+
+
+-- * 테이블 레벨 : 테이블 생성 시 컬럼 정의가 끝난 후 마지막에 작성
+
+
+-- * 제약조건 지정 방법
+-- 1) 컬럼 레벨   : [CONSTRAINT 제약조건명] 제약조건 
+-- 2) 테이블 레벨 : [CONSTRAINT 제약조건명] 제약조건(컬럼명) => 사용자 제약조건 이름 지정 시
+
+ * */
+
+
+-- NULL빼고는 중복이 불가능하다
+
+CREATE TABLE USER_USED_UK ( 
+	-- 유니크 제약조건을 생성한다
+	USER_NO NUMBER NOT NULL  -- 사용자 번호에 대한 컬럼 => 모든 사용자는 사용자번호가 있어야 하기 때문에
+	-- USER_ID VARCHAR2(20) UNIQUE -- 컬럼레벨 => 제약조건은 알아서 지어달라는 말
+	USER_ID VARCHAR2(20) CONSTRAINT USER_ID_U UNIQUE -- 컬럼레벨 => 제약조건 이름을 직접 지정하는 방식
+	
+	,USER_PWD VARCHAR2(20)
+	,USER_NAME VARCHAR2(30)
+	,GENDER VARCHAR2(10)
+	,PHONE VARCHAR2(30)
+	,EMAIL VARCHAR2(50),
+	-- 마지막 컬럼이 끝나고 콤마가 있어야 함
+	
+	-- 여기서부터는 컬럼 레벨이 아닌 테이블 레벨이라는 영역
+	-- 테이블 레벨
+	-- UNIQUE(USER_ID) -- 테이블 레벨에서 제약조건을 쓴다 (다만 제약조건 이름은 미지정)
+	CONSTRAINT USER_ID_U UNIQUE (USER_ID)
+);
+
+
