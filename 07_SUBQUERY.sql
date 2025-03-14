@@ -577,6 +577,8 @@ SELECT AVG(SALARY) FROM EMPLOYEE e WHERE JOB_CODE ='J2';  --  직급별인데 GR
 
 -- 이와같은 식으로 진행한다
 
+-- 메인의 급여> 서브쿼리의 조건인 것만 조회하겠다
+
 
 -- 상관쿼리 이름
 SELECT EMP_NAME, JOB_CODE, SALARY FROM EMPLOYEE MAIN 
@@ -610,7 +612,7 @@ FROM EMPLOYEE MAIN LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID) WHERE MANAGER_I
 
 
 
--- ex30
+-- ex3)
 
 -- 부서별 입사일이 가장 빠른 사원의 사번과 이름, 부서코드와 부서이름 (NULL이라면 소속이 없다), 직급명, 입사일을 조회한다
 
