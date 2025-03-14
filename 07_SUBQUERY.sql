@@ -664,92 +664,139 @@ WHERE ENT_YN = 'N' AND HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE SUB WHER
 ;
 
 
+--------------------------------------------------------------------ex2) 답안 정리------------------------------------------------------------------------------------------------
 
 
--- 상관쿼리1) 
-/*
- 이태림이 DB부서에서 가장빠른 입사& 퇴사자여서 걸러졌는데 D8부서가 아예 제외되게 만들고싶지는 않음 
- -> 메인쿼리에서 퇴사자 & DB부서의 가장 빠른 입사일인 이태림을 이미 제외시킨 상태
- * */
 
-SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
-FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
-WHERE ENT_YN = 'N' AND HIRE_DATE = (SELECT MIN(HIRE_DATE) FROM EMPLOYEE SUB WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE) 
-ORDER BY HIRE_DATE;
-;
+-- 사수가 있는 직원의 사번, 이름, 부서명, 사수사번 조회
+--> 상관 서브쿼리를 사용하여 각 직원의 MANAGER_ID가
+-- 실제로 직원 테이블의 EMP_ID와 일치하는지 확인
 
--- 상관쿼리2) 
-/*
- D8을 포함시키고 이태림을 빼고 D8에서 제일 
- 
- * */
-SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'), JOB_NAME, HIRE_DATE 
-FROM EMPLOYEE MAIN JOIN JOB USING (JOB_CODE) LEFT JOIN DEPARTMENT ON (DEPT_ID = DEPT_CODE)
- WHERE HIRE_DATE = (SELECT MIN(HIRE_DATE)
+-- 메인쿼리 (직원의 사번, 이름, 부서명, 사수사번 조회)
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, MANAGER_ID
+FROM EMPLOYEE
+LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID);
+
+
+-- 서브쿼리 (사수인 직원 조회)
+SELECT EMP_ID
+FROM EMPLOYEE
+WHERE EMP_ID = 100;
+
+
+-- 상관쿼리
+SELECT EMP_ID, EMP_NAME, DEPT_TITLE, MANAGER_ID
+FROM EMPLOYEE MAIN
+LEFT JOIN DEPARTMENT ON (DEPT_CODE = DEPT_ID)
+WHERE MANAGER_ID = (SELECT EMP_ID
+										FROM EMPLOYEE SUB
+										WHERE SUB.EMP_ID = MAIN.MANAGER_ID);
+
+--------------------------------------------
+
+-- 부서별 입사일이 가장빠른 사원의
+-- 사번, 이름, 부서코드, 부서명(NULL 이면 '소속없음'), 
+-- 직급명, 입사일을 조회하고 
+-- 입사일이 빠른순으로 정렬해라. 
+-- 단, 퇴사한 직원은 제외해라.
+
+
+-- 메인쿼리(사번, 이름, 부서코드, 부서명(NULL 이면 '소속없음'), 
+-- 직급명, 입사일을 조회, 단, 퇴사한 직원은 제외해라.)
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'),
+JOB_NAME, HIRE_DATE
+FROM EMPLOYEE
+JOIN JOB USING(JOB_CODE)
+LEFT JOIN DEPARTMENT ON(DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N';
+
+-- 서브쿼리(부서별 입사일이 가장빠른 사원)
+SELECT MIN(HIRE_DATE)
+FROM EMPLOYEE
+WHERE DEPT_CODE = 'D8';
+
+
+-- 1번째 상관쿼리(이태림이 D8부서에서 가장빠른 입사&퇴사자여서 걸러짐
+-- D8부서 아예 제외)
+-- D8부서의 가장 빠른 입사일 : 1997-09-12 00:00:00.000
+-- 메인쿼리에서 퇴사자 & D8부서의 가장빠른입사일인 이태림을 제외시킨 상태
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'),
+JOB_NAME, HIRE_DATE
+FROM EMPLOYEE MAIN
+JOIN JOB USING(JOB_CODE)
+LEFT JOIN DEPARTMENT ON(DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N'
+AND HIRE_DATE = (SELECT MIN(HIRE_DATE)
 								FROM EMPLOYEE SUB
-								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE AND ENT_YN = 'N' 
-								OR (SUB.DEPT_CODE IS NULL AND MAIN.DEPT_CODE IS NULL))
+								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE)
 ORDER BY HIRE_DATE;
 
 
 
 
 
--- D8부서의 가장 빠른 입사일 => 메인 쿼리에서 퇴사자 & D8부서의 가장빠른 입사일인 이태림을 벌써 제외시킨 상태 => 원하는 결과가 안 나옴
+-- 2번째 상관쿼리 (퇴사자인 이태림 제외한 상태로, D8부서의 가장 빠른 입사자도 포함)
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'),
+JOB_NAME, HIRE_DATE
+FROM EMPLOYEE MAIN
+JOIN JOB USING(JOB_CODE)
+LEFT JOIN DEPARTMENT ON(DEPT_ID = DEPT_CODE)
+--WHERE ENT_YN = 'N'
+WHERE HIRE_DATE = (SELECT MIN(HIRE_DATE)
+								FROM EMPLOYEE SUB
+								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE
+								AND ENT_YN = 'N'
+								OR (SUB.DEPT_CODE IS NULL AND 
+								MAIN.DEPT_CODE IS NULL)) -- 소속없음까지 포함
+ORDER BY HIRE_DATE;
 
 
 
+--------------------------------------------------------------------ex2) 답지 마무리------------------------------------------------------------------------------------------------
 
 
 
+/*
+ * -- 부서별 입사일이 가장빠른 사원의
+-- 사번, 이름, 부서코드, 부서명(NULL 이면 '소속없음'), 
+-- 직급명, 입사일을 조회하고 
+-- 입사일이 빠른순으로 정렬해라. 
+-- 단, 퇴사한 직원은 제외해라.
+
+ * */
 
 
-
--- 모든 직원의 이름, 직급, 급여, 전체사원 중 가장 높은 급여와의 차를 조회
--- 서브 = 전체사원 중 가장 높은 급여
+--연습
 
 
-SELECT EMP_NAME, JOB_CODE, SALARY, (SELECT MAX(SALARY) FROM EMPLOYEE) -SALARY "급여차" FROM EMPLOYEE ;
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'),
+JOB_NAME, HIRE_DATE
+FROM EMPLOYEE MAIN
+JOIN JOB USING(JOB_CODE)
+LEFT JOIN DEPARTMENT ON(DEPT_ID = DEPT_CODE)
+WHERE ENT_YN = 'N'
+AND HIRE_DATE = (SELECT MIN(HIRE_DATE)
+								FROM EMPLOYEE SUB
+								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE)
+ORDER BY HIRE_DATE;
 
+--------------------------------------------------------------------이걸 이해하셨으면 아래 걸 이해하시면 됩니다------------------------------------------------------------------------------------------------
 
+SELECT EMP_ID, EMP_NAME, DEPT_CODE, NVL(DEPT_TITLE, '소속없음'),
+JOB_NAME, HIRE_DATE
+FROM EMPLOYEE MAIN
+JOIN JOB USING(JOB_CODE)
+LEFT JOIN DEPARTMENT ON(DEPT_ID = DEPT_CODE)
+--WHERE ENT_YN = 'N'
+WHERE HIRE_DATE = (SELECT MIN(HIRE_DATE)
+								FROM EMPLOYEE SUB
+								WHERE MAIN.DEPT_CODE = SUB.DEPT_CODE
+								AND ENT_YN = 'N'
+								OR (SUB.DEPT_CODE IS NULL AND 
+								MAIN.DEPT_CODE IS NULL)) -- 소속없음까지 포함
+ORDER BY HIRE_DATE;
 
-
--- 모든 직원의 이름, 직급, 급여, 각 직원들이 속한 직급의 급여 평균을 조회
-
--- 각 직원들이 속한 직급 (스칼라+ 상관 커리)의 서브쿼리
-
-
-
-SELECT EMP_NAME, JOB_CODE, SALARY  FROM EMPLOYEE ;
-
--- 서브쿼리 
-
-SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J1' ;
-SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J2' ;
-SELECT AVG(SALARY) FROM EMPLOYEE WHERE JOB_CODE ='J3' ;
-
-
-
-
---최종
-
-SELECT EMP_NAME, JOB_CODE, SALARY, (SELECT ROUND(AVG(SALARY),-3) FROM EMPLOYEE SUB WHERE SUB.JOB_CODE = MAIN.JOB_CODE) 평균  FROM EMPLOYEE MAIN 
-;
-
-
--- 모든 사원의 사번, 이름, 관리자사번, 관리자명을 조회 (단 관리자가 없는 경우 '없음'으로 표시) => 스칼라와 상관 커리르 섞어라
-
-
--- 메인
-SELECT EMP_NO, EMP_NAME, MANAGER_ID, NVL ( ( SELECT EMP_NAME FROM EMPLOYEE SUB  WHERE  MAIN.MANAGER_ID = SUB.EMP_ID ), '없음' )관리자명  FROM EMPLOYEE MAIN ;
-
--- 서브
-
-( SELECT EMP_NAME FROM EMPLOYEE SUB  WHERE  MAIN.MANAGER_ID = SUB.EMP_ID );
-
-
-
-
+-------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
 /*

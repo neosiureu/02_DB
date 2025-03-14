@@ -263,10 +263,10 @@ INSERT INTO TB_TEST VALUES (SEQ_TEST_NO.NEXTVAL, '철수');
 INSERT INTO TB_TEST VALUES (SEQ_TEST_NO.NEXTVAL, '유리');
 
 SELECT SEQ_TEST_NO.CURRVAL FROM DUAL;
+
+
+UPDATE TB_TEST SET TEST_NO = SEQ_TEST_NO.NEXTVAL WHERE TEST_NAME = '짱구';
 SELECT * FROM TB_TEST ;
-
-
-UPDATE TB_TEST SSET TEST_NO = SEQ_TEST_NO.NEXTVAL WHERE TEST_NAME = '짱구';
 
 
 ALTER SEQUENCE SEQ_TEST_NO
@@ -279,6 +279,107 @@ SELECT SEQ_TEST_NO.NEXTVAL FROM DUAL;
 
 
 
+/*
+ INDEX(색인)
+
+- SQL 구문 중 SELECT 처리 속도를 향상 시키기 위해 * 컬럼에 대하여 생성하는 객체
+
+
+- 인덱스 내부 구조는 B* 트리(B-star tree) 형식으로 되어있음.
+
+
+INDEX의 장점
+
+이진 트리 형식으로 구성되어 자동 정렬 및 검색 속도 증가.
+조회 시 테이블의 전체 내용을 확인하며 조회하는 것이 아닌 인덱스가 지정된 컬럼만을 이용해서 조회하기 때문에 시스템의 부하가 낮아짐.
+
+
+INDEX의 단점
+
+데이터 변경(INSERT,UPDATE,DELETE) 작업 시 이진 트리 구조에 변형이 일어남
+DML 작업이 빈번한 경우 시스템 부하가 늘어 성능이 저하됨.
+인덱스도 하나의 객체이다 보니 별도 저장공간이 필요(메모리 소비).
+인덱스 생성 시간이 필요함.
+
+
+[작성법]
+
+CREATE [UNIQUE] INDEX 인덱스명
+ON 테이블명 (컬럼명[, 컬럼명 | 함수명]);
+DROP INDEX 인덱스명;
+
+인덱스가 자동 생성되는 경우
+
+PK ,FK, UNIQUE 제약조건이 설정된 컬럼에 대해 UNIQUE INDEX가 자동 생성된다.
+
+PK에 자동 생성되는 이유 : 기본 키는 중복을 허용하지 않고, NOT NULL이어야 하기 때문이다.
+
+UNIQUE 제약조건 설정 컬럼에서 자동생성 되는 이유 : 중복을 허용하지 않는 고유 값을 보장해야하기 때문이다.
+ * */
+
+
+SELECT ROWID, EMP_ID, EMP_NAME FROM EMPLOYEE;
+
+--오라클에서 각 행의 고유한 주소를 나타내는 가상 컬럼 (물리적 주소)
+-- 인덱스가 ROWID를 저장 => 인덱스 = 컬럼 값 + 해당행의 ROWID를 연결시켜 저장
+-- 컬럼 값을 통해 해당 행의 ROWID를 빠르게 찾아낼 수 있다
+
+-- 인덱스가 생성된 장소를 찾아볼 수 있는 명령어
+
+-- 가령 딕셔너리 뷰
+
+SELECT INDEX_NAME, TABLE_NAME, UNIQUENESS, STATUS FROM USER_INDEXES;
+
+
+-- 인위적으로 만드는 인덱스
+-- EMPLOYEE 테이블의 EMP_NAME 컬럼에 인덱스를 생성
+
+CREATE INDEX IDX_EMP_NAME ON EMPLOYEE (EMP_NAME);
+
+
+-- 지금부터는 EMPLYOEE테이블의 EMP_NAME컬럼에 대해 빠른 검색이 가능
+
+/*
+ 인데스명: IDX_EMP_NAME 
+ 테이블명: EMPLOYEE
+ 컬럼명: EMP_NAME
+ 목적: EMP_NAME을 이용한 컬럼 검색 속도 향상
+
+ * */
+
+
+
+-- EMPLOYEE 테이블의 EMAIL 컬럼에 UNIQUE INDEX를 생성
+
+CREATE UNIQUE INDEX IDX_UNIQUE_EMAIL ON EMPLOYEE (EMAIL);
+
+
+-- 유니크 인덱스의 특징: 중복 방지
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------
+
+
+-- 인덱스 성능 확인용 테이블의 생성
+
+
+CREATE TABLE TB_IDX_TEST (
+	TEST_NO NUMBER PRIMARY KEY, -- 자동으로 유니크 인덱스로 생성
+	TEST_ID VARCHAR2(20) NOT NULL
+);
+
+
+-- 총 백만개의 샘플 데이터를 삽입한다
+
+
+-- TB_IDX_TEST테이블에 100만개의 데이터를 삽입하기 위해
+
+-- PL/SQL이라는 것을 사용한다
+
+
+-- 오라클 데이터베이스에서 사용하는 절차적 확장 언어
+
+-- 데이터베이스인데도 변수, 조건문 (IF/ CASE), 반복문 (LOOP/ WHILE)이 모두 가능하다 => 논리적 흐름 제어가 필요할 때 이러한 문법을 사용한다
 
 
 
@@ -287,4 +388,42 @@ SELECT SEQ_TEST_NO.NEXTVAL FROM DUAL;
 
 
 
+
+
+
+
+-- PL/SQL아 100만번 INSERT 해줘
+
+
+BEGIN
+	FOR I IN 1..1000000 -- 1부터 100만까지 I변수가 반복된다.
+	
+	LOOP
+		INSERT INTO TB_IDX_TEST
+		VALUES (I, 'TEST' || I );  -- 1부터 TEST1 2에는 TEST2 .... 백만에는 TEST1000000와 같이 표시하기 위함
+	END LOOP;
+	COMMIT; -- 삽입 작업이 길기 때문에 커밋하는 편이 나음
+END;
+
+SELECT COUNT(*) FROM TB_IDX_TEST;
+
+
+-- 인덱스를 이용한 검색
+
+-- WHERE절에 INDEX가 적용된 컬럼을 언급
+
+/*
+ 인덱스 사용 안할 시 TEST_ID가 'TEST500000'인 행을 조회한다
+ 인덱스가 있는 것은 TEST_NO NUMBER PRIMARY KEY이지 TEST_ID는 아님 
+ => TEST_NO가 500000인 행을 조회하면 실제로 성능상 빠른 효과를 볼 수 있다
+ 
+ * */
+
+
+
+SELECT * FROM TB_IDX_TEST WHERE TEST_ID = 'TEST500000';
+
+SELECT * FROM TB_IDX_TEST WHERE TEST_NO = 500000;
+
+COMMIT;
 -- LAST
