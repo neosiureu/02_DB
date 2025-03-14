@@ -195,6 +195,32 @@ SELECT * FROM kh.EMPLOYEE;
 
 
 
+-- 1.SYS계정으로 사용자 계정을 생성하는 방법
+
+ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;
+-- 계정명에 대한 이상한 SQL 법칙을 무시하게 하는 문법
+
+-- [작성법]
+
+-- CREATE UESER 사용자명 IDENTIFIED BY 비밀번호;
+
+CREATE USER kh_shop IDENTIFIED BY 1234;
+
+
+
+-- ljw_sample은 create session권한이 없다 =>  접속권한 부여해야 함
+
+
+/*
+ 권한 부여 작성법
+ GRANT 권한1, 권한2, 권한3 ... TO 사용자명
+ * */
+
+GRANT CREATE SESSION TO kh_shop;
+
+
+
+GRANT CONNECT, RESOURCE TO kh_shop;
 
 
 
