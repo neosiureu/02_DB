@@ -51,7 +51,6 @@ CREATE TABLE ORDERS_DETAILS (
 );
 
 
-SELECT * FROM PRODUCTS;
 
 INSERT INTO PRODUCTS VALUES (101,'Apple iPhone 12',1,1500000,30);
 INSERT INTO PRODUCTS VALUES (102,'Samsug Galaxy S24',1,1800000,50);
@@ -110,9 +109,10 @@ WHERE EXTRACT(YEAR FROM ORDERS.ORDER_DATE) = '2024' AND  CUSTOMERS.NAME ='홍길
 
 
 
-SELECT EXTRACT (YEAR FROM order_date ), sum (PRICE * QUANTITY), ORDER_ID 주문번호 , PRODUCT_NAME 상품명 , QUNTITY 수량 , PRICE "주문별 금액 합계"      
-FROM  ORDERS JOIN orders_details USING (order_id) JOIN products USING (product_id) WHERE ORDERS.CUSTOMER_ID =2 GROUP BY EXTRACT(YEAR FROM order_date)  ;
-
+SELECT ORDER_ID 주문번호 , PRODUCT_NAME 상품명 , QUNTITY 수량 ,  PRICE "개별금액", price*quntity "주문별금액합계"  
+FROM  ORDERS JOIN orders_details USING (order_id) JOIN products USING (product_id) 
+WHERE ORDERS.CUSTOMER_ID =2 
+GROUP BY EXTRACT(YEAR FROM ORDER_DATE), order_id, product_name, quntity, price ORDER BY order_id  ;
 
 SELECT * FROM customers;
 
