@@ -93,20 +93,14 @@ SELECT * FROM job;
 
 SELECT max(substr(emp_no,1,2))  FROM EMPLOYEE;
 
-SELECT emp_id, emp_name, job_name , 
-       FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD')) / 12) AS 나이, 
-       SALARY * (1 + NVL(BONUS,0)) AS 보너스포함연봉
-FROM employee 
-JOIN job ON (JOB.JOB_CODE = EMPLOYEE.JOB_CODE)
-WHERE TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD') = (
-    SELECT MIN(TO_DATE('19' || SUBSTR(e2.EMP_NO,1,6), 'YYYYMMDD')) 
-    FROM employee e2
-    WHERE e2.JOB_CODE = employee.JOB_CODE
-)
-GROUP BY DEPT_CODE, emp_id, emp_name, job_name, salary, bonus, emp_no
+SELECT emp_id, emp_name, job_name, 
+       FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD')) / 12) AS 나이,
+       SALARY * (1 + NVL(BONUS, 0)) AS 보너스포함연봉
+FROM employee
+JOIN job ON job.JOB_CODE = employee.JOB_CODE
+GROUP BY job_name, emp_id, emp_name, salary, bonus, emp_no
+HAVING TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD') = MIN(TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD'))
 ORDER BY 나이 DESC;
-
-
 
 /*
  대표 예시
