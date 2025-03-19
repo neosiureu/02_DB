@@ -110,7 +110,7 @@ WHERE EXTRACT(YEAR FROM ORDERS.ORDER_DATE) = '2024' AND  CUSTOMERS.NAME ='홍길
 
 
 
-SELECT EXTRACT (YEAR FROM order_date ), sum (PRICE * QUANTITY), ORDER_ID 주문번호 , PRODUCT_NAME 상품명 , QUNTITY 수량 , PRICE "주문별 금액 합계"      
+SELECT EXTRACT (YEAR FROM order_date ), sum (PRICE * quntity), sum(quntity),ORDER_ID 주문번호 , PRODUCT_NAME 상품명 , QUNTITY 수량 , PRICE "주문별 금액 합계"      
 FROM  ORDERS JOIN orders_details USING (order_id) JOIN products USING (product_id) WHERE ORDERS.CUSTOMER_ID =2 GROUP BY EXTRACT(YEAR FROM order_date)  ;
 
 

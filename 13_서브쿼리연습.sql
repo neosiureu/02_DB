@@ -1,0 +1,74 @@
+
+
+
+
+-- 1번
+SELECT DEPT_TITLE  FROM EMPLOYEE e JOIN DEPARTMENT ON (e.DEPT_CODE  = DEPARTMENT.DEPT_ID ) WHERE e.EMP_NAME ='전지연' ;
+
+SELECT emp_id, emp_name, phone, hire_date , DEPT_TITLE 
+
+FROM EMPLOYEE e JOIN DEPARTMENT d ON (d.DEPT_id = e.DEPT_CODE ) 
+
+WHERE dept_title = (SELECT DEPT_TITLE   FROM EMPLOYEE e JOIN DEPARTMENT ON (e.DEPT_CODE  = DEPARTMENT.DEPT_ID ) WHERE e.EMP_NAME ='전지연') AND emp_name <>'전지연' ; 
+
+
+
+
+
+
+
+
+
+
+
+
+
+--2번
+
+SELECT dept_code, emp_name, phone, JOB_NAME   FROM employee LEFT JOIN job ON  EMPLOYEE.JOB_CODE  = job.JOB_CODE 
+
+WHERE SALARY = (SELECT max(salary)  FROM employee WHERE EXTRACT(YEAR FROM hire_date) >2000)   ;
+
+
+
+
+SELECT e.DEPT_CODE  FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철';
+SELECT e.JOB_CODE   FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철';
+
+
+-- 3번
+SELECT EMPLOYEE.EMP_ID, EMPLOYEE.EMP_NAME , dept_code, dept_title, job_name  FROM employee JOIN job ON ( EMPLOYEE.JOB_CODE  = JOB.JOB_CODE ) JOIN DEPARTMENT d ON (EMPLOYEE.DEPT_CODE  = d.DEPT_ID ) 
+WHERE EMPLOYEE.DEPT_CODE  =  (SELECT e.DEPT_CODE  FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철')  AND JOB.JOB_CODE = (SELECT e.JOB_CODE   FROM EMPLOYEE e WHERE e.EMP_NAME ='노옹철') AND EMPLOYEE.EMP_NAME <> '노옹철'
+;
+
+
+
+
+-- 4번
+
+SELECT dept_code FROM EMPLOYEE e  WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000 ;
+SELECT job_code FROM EMPLOYEE e  WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000 ;
+
+
+SELECT emp_id, emp_name, dept_code, job_code, hire_date FROM EMPLOYEE e WHERE dept_code = (SELECT dept_code FROM EMPLOYEE e  
+WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000  ) AND job_code = (SELECT job_code FROM EMPLOYEE e  WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000) ;
+
+
+SELECT * FROM employee;
+SELECT * FROM department;
+SELECT * FROM job;
+
+-- 5번
+
+SELECT e.dept_code  FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77'  ;
+SELECT MANAGER_ID   FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77'  ;
+
+SELECT emp_id  FROM EMPLOYEE e;
+
+
+
+-- 6번
+
+
+
+-- 7번
