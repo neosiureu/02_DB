@@ -91,15 +91,26 @@ SELECT * FROM department;
 SELECT * FROM job;
 
 
-SELECT max(substr(emp_no,1,2)) FROM employee;
+SELECT max(substr(emp_no,1,2))  FROM EMPLOYEE;
 
-SELECT FLOOR(MONTHS_BETWEEN(SYSDATE, 
-             TO_DATE(SUBSTR(emp_no, 1, 6), 'YYMMDD')))
-FROM EMPLOYEE;
+SELECT emp_id, emp_name, job_name , 
+       FLOOR(MONTHS_BETWEEN(SYSDATE, TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD')) / 12) AS 나이, 
+       SALARY * (1 + NVL(BONUS,0)) AS 보너스포함연봉
+FROM employee 
+JOIN job ON (JOB.JOB_CODE = EMPLOYEE.JOB_CODE)
+WHERE TO_DATE('19' || SUBSTR(EMP_NO,1,6), 'YYYYMMDD') = (
+    SELECT MIN(TO_DATE('19' || SUBSTR(e2.EMP_NO,1,6), 'YYYYMMDD')) 
+    FROM employee e2
+    WHERE e2.JOB_CODE = employee.JOB_CODE
+)
+GROUP BY DEPT_CODE, emp_id, emp_name, job_name, salary, bonus, emp_no
+ORDER BY 나이 DESC;
 
-SELECT emp_id, emp_name, dept_title, floor( MONTHS_BETWEEN(sysdate, HIRE_DATE)/12)
-
-FROM employee JOIN department ON (dept_id = dept_code);
 
 
-
+/*
+ 대표 예시
+ SELECT TO_DATE('2021-12-12', 'YYYY-MM-DD')
+     , TO_DATE('2021-12-12 17:10:00', 'YYYY-MM-DD HH24:MI:SS')
+  FROM dual
+ * */
