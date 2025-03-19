@@ -54,21 +54,52 @@ SELECT emp_id, emp_name, dept_code, job_code, hire_date FROM EMPLOYEE e WHERE de
 WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000  ) AND job_code = (SELECT job_code FROM EMPLOYEE e  WHERE EXTRACT (YEAR FROM HIRE_DATE ) =2000) ;
 
 
-SELECT * FROM employee;
-SELECT * FROM department;
-SELECT * FROM job;
 
 -- 5번
 
-SELECT e.dept_code  FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77'  ;
-SELECT MANAGER_ID   FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77'  ;
+SELECT e.dept_code  FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77' AND (substr(EMP_NO,8,1)=2)  ;
+SELECT MANAGER_ID   FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77' AND (substr(EMP_NO,8,1)=2) ;
 
-SELECT emp_id  FROM EMPLOYEE e;
-
+SELECT emp_id, EMP_NAME, dept_code, MANAGER_ID, EMP_NO , HIRE_DATE     
+FROM EMPLOYEE 
+WHERE dept_code in (SELECT e.dept_code  FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77' AND (substr(EMP_NO,8,1)=2)) AND 
+manager_id IN (SELECT MANAGER_ID   FROM EMPLOYEE e WHERE substr (emp_no,1,2) = '77' AND (substr(EMP_NO,8,1)=2))
+;
 
 
 -- 6번
 
 
 
+
+
+SELECT Min(HIRE_DATE ) FROM EMPLOYEE e GROUP BY e.DEPT_CODE  ;
+
+
+SELECT emp_id, emp_name, nvl(DEPT_TITLE, '소속없음'), job_name, HIRE_DATE   FROM EMPLOYEE e LEFT OUTER JOIN DEPARTMENT  on(DEPARTMENT.DEPT_ID  = e.DEPT_CODE  ) JOIN job ON (e.JOB_CODE  = JOB.JOB_CODE ) 
+WHERE ent_date IS  NULL 
+GROUP BY DEPT_CODE, emp_id, emp_name, DEPT_TITLE, job_name, HIRE_DATE
+HAVING hire_date in (SELECT Min(HIRE_DATE ) FROM EMPLOYEE e GROUP BY e.DEPT_CODE)
+ORDER BY e.HIRE_DATE 
+;
+
+
 -- 7번
+
+SELECT * FROM employee;
+SELECT * FROM department;
+SELECT * FROM job;
+
+
+SELECT max(substr(emp_no,1,2)) FROM employee;
+
+SELECT FLOOR(MONTHS_BETWEEN(SYSDATE, 
+             TO_DATE(SUBSTR(emp_no, 1, 6), 'YYMMDD')))
+FROM EMPLOYEE;
+
+SELECT emp_id, emp_name, dept_title, floor( MONTHS_BETWEEN(sysdate, HIRE_DATE)/12)
+
+FROM employee JOIN department ON (dept_id = dept_code);
+
+
+
