@@ -2,8 +2,7 @@
 
 SELECT * FROM USER_TABLES;
 SELECT * FROM USER_CONSTRAINTS  ;
-
-
+-- 결과 하나하나가 뷰
 
 /*
  * - 데이터 딕셔너리란?
@@ -22,6 +21,7 @@ SELECT * FROM USER_CONSTRAINTS  ;
 
 /*
  ---------------------------------------------------------------------
+ 
 
 -- DDL (DATA DEFINITION LANGUAGE) : 데이터 정의 언어
 -- 객체(OBJECT)를 만들고(CREATE), 수정(ALTER)하고, 삭제(DROP) 등
@@ -58,6 +58,22 @@ SELECT * FROM USER_CONSTRAINTS  ;
  * */
 
 
+-- MEMBER 테이블을 직접 생성해보자
+
+
+CREATE TABLE "MEMBER" (
+	MEMBER_ID VARCHAR2(20) -- 최대6자의 한글, 최대 20자의 영어를 넣을 수 있음
+, MEMBER_PWD VARCHAR2(20)
+, MEMBER_NAME VARCHAR2(30)
+, MEMBER_SSN CHAR(14)
+, ENROLL_DATE DATE DEFAULT SYSDATE -- 값을 지정하지 않으면 이 값이 자동으로 들어감
+
+);
+
+-- CT이 컬타
+
+SELECT * FROM MEMBER;
+
 /*
  * 자료형
  *
@@ -87,19 +103,6 @@ SELECT * FROM USER_CONSTRAINTS  ;
  * */
 
 
--- MEMBER 테이블을 직접 생성해보자
-
-
-CREATE TABLE "MEMBER" (
-	MEMBER_ID VARCHAR2(20) -- 최대6자의 한글, 최대 20자의 영어를 넣을 수 있음
-, MEMBER_PWD VARCHAR2(20)
-, MEMBER_NAME VARCHAR2(30)
-, MEMBER_SSN CHAR(14)
-, ENROLL_DATE DATE DEFAULT SYSDATE -- 값을 지정하지 않으면 이 값이 자동으로 들어감
-
-);
-
-
 
 -- 컬럼에 대한 COMMENT 달기
 
@@ -118,19 +121,18 @@ COMMENT ON COLUMN MEMBER.MEMBER_SSN IS '회원 주민등록번호';
 
 COMMENT ON COLUMN MEMBER.ENROLL_DATE IS '회원 가입일';
 
+-- CT이 컬타 + COC테.컬IS명
 
 SELECT * FROM MEMBER;
 
 -- 테이블에 삽입하기
 
-
-
-
-
-
 -- INSERT INTO 테이블명 VALUES(값1, 값2, ... 마지막 값)
 
 INSERT INTO "MEMBER" VALUES('MEM01','123ABC','홍길동','960830-1111222', DEFAULT );
+
+
+-- CT이 컬타 + COC테.컬IS명 
 
 
 

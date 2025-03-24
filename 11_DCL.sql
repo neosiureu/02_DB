@@ -229,3 +229,148 @@ GRANT CONNECT, RESOURCE TO kh_shop;
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+ 요약하면 다음과 같습니다:
+
+---
+
+## 💡 Oracle에서 사용자 계정 생성 및 권한 설정 흐름 요약
+
+### ✅ 1. SYS 계정에서 사용자 생성
+```sql
+ALTER SESSION SET "_ORACLE_SCRIPT" = TRUE;  -- 특수 계정명 허용 설정
+CREATE USER 사용자명 IDENTIFIED BY 비밀번호;  -- 예: CREATE USER ljw_sample IDENTIFIED BY 1234;
+```
+
+### ✅ 2. 기본 접속 권한 부여
+```sql
+GRANT CREATE SESSION TO 사용자명;
+```
+
+### ✅ 3. 객체 생성 권한 및 테이블스페이스 설정
+```sql
+GRANT CREATE TABLE TO 사용자명;
+ALTER USER 사용자명 DEFAULT TABLESPACE SYSTEM QUOTA UNLIMITED ON SYSTEM;
+```
+
+### ✅ 4. ROLE(역할)로 편리하게 권한 부여
+- `CONNECT`: 접속 관련 권한 묶음 (CREATE SESSION 등)
+- `RESOURCE`: 객체 생성 관련 권한 묶음 (CREATE TABLE 등)
+```sql
+GRANT CONNECT, RESOURCE TO 사용자명;
+```
+
+### ✅ 5. 다른 사용자 객체에 대한 **객체 권한 부여**
+- 특정 테이블만 접근 허용:
+```sql
+GRANT SELECT ON 테이블명 TO 사용자명;  -- 예: GRANT SELECT ON EMPLOYEE TO ljw_sample;
+```
+
+- 접근 시 `소유자.테이블명` 형식으로 사용:
+```sql
+SELECT * FROM kh.EMPLOYEE;
+```
+
+### ✅ 6. 객체 권한 회수
+```sql
+REVOKE SELECT ON 테이블명 FROM 사용자명;  -- 예: REVOKE SELECT ON EMPLOYEE FROM ljw_sample;
+```
+
+---
+
+이 과정을 반복하여 `kh_shop` 계정도 생성하고 동일한 권한 부여를 수행함.
+ * */
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/*
+`GRANT CONNECT, RESOURCE TO 사용자명;` 한 줄이면 정말 **2번, 3번이 전부 필요 없는지** 헷갈릴 수 있는데,  
+실제로는 **부분적으로만 대체가 가능**해.
+
+---
+
+## 🔎 CONNECT, RESOURCE가 부여하는 권한은?
+
+### ✅ `CONNECT` ROLE에 포함된 권한 (접속 관련)
+- `CREATE SESSION`  
+→ **DB 접속을 가능하게 해줌**
+
+즉, **2번: GRANT CREATE SESSION TO 사용자명**은 `CONNECT`를 부여하면 **자동 포함되므로 따로 안 해도 됨!**
+
+---
+
+### ✅ `RESOURCE` ROLE에 포함된 권한 (객체 생성 관련, 일부)
+- `CREATE TABLE`
+- `CREATE SEQUENCE`
+- `CREATE PROCEDURE`
+- `CREATE TRIGGER`
+- `CREATE TYPE`
+
+즉, **3번 중 일부인 `GRANT CREATE TABLE TO 사용자명`은 RESOURCE에 포함되므로 생략 가능**해!
+
+---
+
+## ❗ 그런데 완전히 끝난 건 아님!
+
+### 🚫 RESOURCE Role에는 **테이블스페이스 할당**이 없다!
+즉, 다음 줄:
+
+```sql
+ALTER USER 사용자명 DEFAULT TABLESPACE SYSTEM QUOTA UNLIMITED ON SYSTEM;
+```
+
+이거는 **꼭 필요함!**  
+안 해주면 테이블을 만들 수 있는 권한이 있어도 **저장할 공간이 없어서** `ORA-01950: no privileges on tablespace` 같은 오류가 나옴.
+
+---
+
+## ✅ 결론 정리
+
+| 항목 | CONNECT, RESOURCE로 대체 가능? |
+|------|------------------------------|
+| `GRANT CREATE SESSION` | ✅ YES → CONNECT에 포함됨 |
+| `GRANT CREATE TABLE`   | ✅ YES → RESOURCE에 포함됨 |
+| `ALTER USER ... TABLESPACE ...` | ❌ NO → 별도로 꼭 해줘야 함 |
+
+---
+
+궁금한 점 있으면 이어서 설명해줄게!
+ 
+ * */

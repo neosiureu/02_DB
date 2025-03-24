@@ -25,7 +25,7 @@ VIEW
  * ** VIEW 사용 시 주의 사항 **
  1) 가상의 테이블(실체 X)이기 때문에 ALTER 구문 사용 불가.
  2) VIEW를 이용한 DML(INSERT,UPDATE,DELETE)이 가능한 경우도 있지만 제약이 많이 따르기 때문에 조회(SELECT) 용도로 대부분 사용.
- <BR> <BR> <BR>
+
   
  *  ** VIEW 작성법 **
   CREATE [OR REPLACE] [FORCE | NOFORCE] VIEW 뷰이름 [컬럼 별칭]

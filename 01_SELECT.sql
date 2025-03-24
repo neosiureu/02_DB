@@ -393,3 +393,21 @@ SELECT EMP_NAME 이름 , DEPT_CODE 코드, EMPLOYEE.SALARY AS 월급 FROM EMPLOY
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
